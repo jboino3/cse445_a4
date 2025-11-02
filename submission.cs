@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,26 +12,22 @@ namespace ConsoleApp1
 {
     public class Program
     {
-        public static string xmlURL = "https://YOUR_USER.github.io/path/Hotels.xml";        // Q1.2
-        public static string xmlErrorURL = "https://YOUR_USER.github.io/path/HotelsErrors.xml";  // Q1.3
-        public static string xsdURL = "https://YOUR_USER.github.io/path/Hotels.xsd";        // Q1.1
+        public static string xmlURL = "https://jboino3.github.io/cse445_a4/Hotels.xml";
+        public static string xmlErrorURL = "https://jboino3.github.io/cse445_a4/HotelsErrors.xml";
+        public static string xsdURL = "https://jboino3.github.io/cse445_a4/Hotels.xsd";
 
         public static void Main(string[] args)
         {
-            // Q3(1): Verify the valid XML
             string result = Verification(xmlURL, xsdURL);
             Console.WriteLine(result);
 
-            // Q3(2): Verify the invalid XML and print all errors
             result = Verification(xmlErrorURL, xsdURL);
             Console.WriteLine(result);
 
-            // Q3(3): Convert valid XML to JSON (must be de-serializable by JsonConvert.DeserializeXmlNode)
             result = Xml2Json(xmlURL);
             Console.WriteLine(result);
         }
 
-        // Q2.1: Validate XML against XSD and return either "No errors are found" or the collected error messages.
         public static string Verification(string xmlUrl, string xsdUrl)
         {
             try
@@ -43,13 +39,16 @@ namespace ConsoleApp1
                 var errors = new List<string>();
                 settings.ValidationEventHandler += (sender, e) =>
                 {
-                    // Include severity and line info when available
-                    var ex = e.Exception;
-                    string where = (ex != null)
-                        ? $"(Line {ex.LineNumber}, Position {ex.LinePosition})"
-                        : "";
-                    errors.Add($"{e.Severity}: {e.Message} {where}".Trim());
+                    if (e.Severity == XmlSeverityType.Error)   
+                    {
+                        var ex = e.Exception;
+                        string where = (ex != null)
+                            ? $"(Line {ex.LineNumber}, Position {ex.LinePosition})"
+                            : "";
+                        errors.Add($"{e.Severity}: {e.Message} {where}".Trim());
+                    }
                 };
+
 
                 using (var reader = XmlReader.Create(xmlUrl, settings))
                 {
@@ -66,26 +65,10 @@ namespace ConsoleApp1
             }
             catch (Exception ex)
             {
-                // Return exception message so the autograder/user sees what failed (network, parse, etc.)
                 return ex.Message;
             }
         }
 
-        // Q2.2: Convert the valid XML into the EXACT JSON shape required by the spec.
-        // Shape:
-        // {
-        //   "Hotels": {
-        //     "Hotel": [
-        //       {
-        //         "Name": "Westin",
-        //         "Phone": ["480-...", "800-..."],
-        //         "Address": { "Number": "...", "Street": "...", "City": "...", "State": "...", "Zip": "...", "NearestAirport": "..." },
-        //         "_Rating": "4.2"   // ONLY if <Rating> exists; omit entirely if missing
-        //       },
-        //       ...
-        //     ]
-        //   }
-        // }
         public static string Xml2Json(string xmlUrl)
         {
             try
@@ -154,7 +137,6 @@ namespace ConsoleApp1
                             jHotel["Address"] = jAddr;
                     }
 
-                    // Optional Rating -> JSON key must be "_Rating" (with underscore) and only when present
                     var ratingText = hotel.SelectSingleNode("Rating")?.InnerText?.Trim();
                     if (!string.IsNullOrEmpty(ratingText))
                         jHotel["_Rating"] = ratingText;
@@ -167,7 +149,6 @@ namespace ConsoleApp1
                         new JObject(new JProperty("Hotel", hotelsArray)))
                 );
 
-                // Must be de-serializable by Newtonsoft.Json (assignment requirement)
                 JsonConvert.DeserializeXmlNode(rootObj.ToString());
 
                 return rootObj.ToString(Newtonsoft.Json.Formatting.Indented);
@@ -179,3 +160,4 @@ namespace ConsoleApp1
         }
     }
 }
+
