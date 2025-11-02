@@ -25,7 +25,7 @@
                     <xs:element name="Zip">
                       <xs:simpleType>
                         <xs:restriction base="xs:string">
-                          <xs:pattern value="\d{5}"/>
+                          <xs:pattern value="[0-9]{5}"/>
                         </xs:restriction>
                       </xs:simpleType>
                     </xs:element>
